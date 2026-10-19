@@ -1,0 +1,48 @@
+name: Patch Kernel Binary
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'payload/**'
+      - 'tools/**'
+      - '.github/workflows/patch.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu python3-pip
+          pip install pyelftools
+
+      - name: Build payload
+        run: make -C payload
+
+      - name: Check inputs
+        run: |
+          if [ ! -f input/kernel ]; then
+            echo "::warning::input/kernel 不存在，跳过 patch 步骤"
+            exit 0
+          fi
+
+      - name: Patch kernel (stub)
+        if: hashFiles('input/kernel') != ''
+        run: |
+          mkdir -p out
+          python3 tools/injector.py \
+            --kernel input/kernel \
+            --payload payload/kxnd.bin \
+            --target do_execve \
+            --out out/kernel.patched
+
+      - name: Upload artifacts
+        if: hashFiles('input/kernel') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: patched-kernel
+          path: out/
