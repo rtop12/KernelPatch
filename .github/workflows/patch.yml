@@ -13,37 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install all deps via apt
+      - name: Install ARM64 cross toolchain + kernel headers
         run: |
           sudo apt update -qq
-          sudo apt install -y -qq build-essential crossbuild-essential-arm64 bc libelf-dev
+          sudo apt install -y -qq crossbuild-essential-arm64
 
-      - name: Fetch KernelPatch (ghproxy)
-        run: |
-          rm -rf KernelPatch
-          wget -q https://mirror.ghproxy.com/https://github.com/bmax121/KernelPatch/archive/refs/heads/main.tar.gz -O kp.tar.gz
-          mkdir -p KernelPatch
-          tar -xf kp.tar.gz --strip-components=1 -C ./KernelPatch
-
-      - name: Download minimal linux headers (ghproxy)
-        run: |
-          wget -q https://mirror.ghproxy.com/https://github.com/torvalds/linux/archive/refs/tags/v6.6.tar.gz -O linux.tar.gz
-          mkdir -p linux
-          tar -xf linux.tar.gz --strip-components=1 -C ./linux
-          cd linux
-          make ARCH=arm64 headers_install INSTALL_HDR_PATH=$PWD/../hdr
-
-      - name: Build
-        run: |
-          export TARGET_COMPILE=aarch64-linux-gnu-
-          make -C ./kpms/mirror_shmem
-        env:
-          KP_ROOT: $PWD/KernelPatch
-          HDR: $PWD/hdr
+      - name: Compile module
+        working-directory: ./code
+        run: make -j$(nproc)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mirror_shmem
-          path: kpms/mirror_shmem/*.kpm
+          name: mirror_shmem-kpm
+          path: ./code/*.kpm
           retention-days: 30
