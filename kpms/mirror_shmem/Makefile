@@ -1,14 +1,14 @@
-CC ?= aarch64-none-elf-gcc
-LD ?= aarch64-none-elf-ld
-OBJCOPY ?= aarch64-none-elf-objcopy
+CC := $(TARGET_COMPILE)gcc
+LD := $(TARGET_COMPILE)ld
+OBJCOPY := $(TARGET_COMPILE)objcopy
 
-KP_ROOT ?= ../..
-HDR_PATH ?= .
+KP_ROOT ?= ../../KernelPatch
+HDR ?= ../hdr
 
 CFLAGS := -ffreestanding -nostdlib -nostdinc -fno-builtin
 CFLAGS += -I$(KP_ROOT)/kernel/include
 CFLAGS += -I$(KP_ROOT)/kernel/patch/include
-CFLAGS += -I$(HDR_PATH)/include
+CFLAGS += -I$(HDR)/include
 CFLAGS += -Wall -Wextra
 
 LDFLAGS := -r
