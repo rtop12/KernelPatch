@@ -30,10 +30,7 @@ jobs:
           wget -q https://github.com/bmax121/KernelPatch/archive/refs/heads/main.tar.gz -O kp.tar.gz
           tar -xf kp.tar.gz --strip-components=1 -C ./KernelPatch
           ls -la ./KernelPatch
-
-      - name: Debug headers
-        run: |
-          ls -la ./KernelPatch/kpm/include
+          ls -la ./KernelPatch/kernel/include
 
       - name: Compile
         run: make -j$(nproc)
