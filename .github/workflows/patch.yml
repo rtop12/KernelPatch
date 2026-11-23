@@ -23,15 +23,16 @@ jobs:
         with:
           release: "13.2.Rel1"
 
-      - name: Fetch KernelPatch
+      - name: Fetch & extract KernelPatch
         run: |
+          rm -rf ./KernelPatch
+          mkdir -p ./KernelPatch
           wget -q https://github.com/bmax121/KernelPatch/archive/refs/heads/main.tar.gz -O kp.tar.gz
-          tar -xf kp.tar.gz
-          mv KernelPatch-main KernelPatch
+          tar -xf kp.tar.gz --strip-components=1 -C ./KernelPatch
+          ls -la ./KernelPatch
 
       - name: Debug headers
         run: |
-          ls -la
           ls -la ./KernelPatch/kpm/include
 
       - name: Compile
