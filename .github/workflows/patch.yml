@@ -10,35 +10,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install packages
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y make wget xz-utils
+          sudo apt install -y git wget
 
-      - name: Install aarch64-none-elf gcc
-        uses: lawkai-vivo/aarch64-none-elf-gcc-action@v1
-        with:
-          release: "13.2.Rel1"
-
-      - name: Fetch & extract KernelPatch
+      - name: Install kpmbuild
         run: |
-          rm -rf ./KernelPatch
-          mkdir -p ./KernelPatch
-          wget -q https://github.com/bmax121/KernelPatch/archive/refs/heads/main.tar.gz -O kp.tar.gz
-          tar -xf kp.tar.gz --strip-components=1 -C ./KernelPatch
-          ls -la ./KernelPatch
-          ls -la ./KernelPatch/kernel/include
+          wget -q https://github.com/bmax121/kpmbuild/releases/latest/download/kpmbuild-linux-x86_64 -O kpmbuild
+          chmod +x ./kpmbuild
 
-      - name: Compile
-        run: make -j$(nproc)
-        working-directory: ./code
+      - name: Build kpm
+        run: ./kpmbuild build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: kpm-output
-          path: ./code/*.kpm
+          path: build/*.kpm
           retention-days: 30
