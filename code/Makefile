@@ -5,8 +5,10 @@ OBJCOPY := $(TARGET_COMPILE)objcopy
 
 KP_DIR ?= ../KernelPatch
 
+# 正确头文件目录！
 CFLAGS  := -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector
-CFLAGS  += -I$(KP_DIR)/kpm/include
+CFLAGS  += -I$(KP_DIR)/kernel/include
+CFLAGS  += -I$(KP_DIR)/kernel/patch/include
 CFLAGS  += -Wall -Wextra
 LDFLAGS := -r
 
