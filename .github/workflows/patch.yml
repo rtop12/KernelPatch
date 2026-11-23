@@ -1,5 +1,4 @@
 name: Build KPM
-
 on:
   push:
     branches: [ main ]
@@ -11,29 +10,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source & pull submodules
+      - name: Checkout & submodules
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Install basic tools
-        run: |
-          sudo apt update
-          sudo apt install -y make wget xz-utils
+      - name: Install make
+        run: sudo apt update && sudo apt install -y make
 
-      - name: Download ARM GNU Toolchain
+      - name: Setup aarch64-none-elf gcc
+        uses: lawkai-vivo/aarch64-none-elf-gcc-action@v1
+        with:
+          release: "13.2.Rel1"
+
+      - name: Check compiler
         run: |
-          TOOLCHAIN_URL="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz"
-          wget -q "$TOOLCHAIN_URL"
-          tar -xf arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
-          export TC_ROOT="$PWD/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf"
-          echo "PATH=$TC_ROOT/bin:$PATH" >> $GITHUB_ENV
+          which aarch64-none-elf-gcc
           aarch64-none-elf-gcc --version
 
-      - name: Compile KPM
+      - name: Build KPM
         working-directory: ./code
-        run: |
-          make -j$(nproc)
+        run: make -j$(nproc)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
