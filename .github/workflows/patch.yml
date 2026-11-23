@@ -1,48 +1,41 @@
-name: Patch Kernel Binary
+name: Build KPM
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - 'payload/**'
-      - 'tools/**'
-      - '.github/workflows/patch.yml'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  patch:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      - name: Install toolchain
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu python3-pip
-          pip install pyelftools
+          sudo apt update
+          sudo apt install -y make wget xz-utils
 
-      - name: Build payload
-        run: make -C payload
-
-      - name: Check inputs
+      - name: Download ARM GNU Toolchain
+        id: toolchain
         run: |
-          if [ ! -f input/kernel ]; then
-            echo "::warning::input/kernel 不存在，跳过 patch 步骤"
-            exit 0
-          fi
+          TOOLCHAIN_URL="https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/gcc-arm-13.2.rel1-x86_64-aarch64-none-elf.tar.xz"
+          wget -q "$TOOLCHAIN_URL"
+          tar -xf gcc-arm-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
+          echo "PATH=$PWD/gcc-arm-13.2.rel1-x86_64-aarch64-none-elf/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Patch kernel (stub)
-        if: hashFiles('input/kernel') != ''
+      - name: Build inside code folder
+        working-directory: ./code
         run: |
-          mkdir -p out
-          python3 tools/injector.py \
-            --kernel input/kernel \
-            --payload payload/kxnd.bin \
-            --target do_execve \
-            --out out/kernel.patched
+          make -j$(nproc)
 
-      - name: Upload artifacts
-        if: hashFiles('input/kernel') != ''
+      - name: Upload KPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: patched-kernel
-          path: out/
+          name: kpm-output
+          path: |
+            ./code/*.kpm
+          retention-days: 30
