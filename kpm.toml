@@ -1,0 +1,8 @@
+name = "mirror_shmem"
+version = "1.0.0"
+author = "you"
+description = "mirror shmem demo"
+license = "MIT"
+
+[[source]]
+path = "src/mirror_shmem.c"
