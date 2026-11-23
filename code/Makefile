@@ -24,4 +24,3 @@ $(OUT): $(OBJ)
 
 clean:
 	rm -f $(OBJ) $(OUT)
-
