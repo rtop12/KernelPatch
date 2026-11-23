@@ -14,30 +14,23 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y make wget xz-utils
+      - name: Install make
+        run: sudo apt update && sudo apt install -y make
 
-      - name: Download & setup toolchain
-        run: |
-          TOOLCHAIN_URL="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz"
-          wget -q "$TOOLCHAIN_URL"
-          tar -xf arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
-          # ✅ 修正真实路径
-          export TC_ROOT="$PWD/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf"
-          echo "PATH=$TC_ROOT/bin:$PATH" >> $GITHUB_ENV
-          aarch64-none-elf-gcc --version
+      - name: Get aarch64-none-elf gcc
+        uses: lawkai-vivo/aarch64-none-elf-gcc-action@v1
+        with:
+          release: "13.2.Rel1"
 
-      - name: Build inside code folder
+      - name: Verify compiler
+        run: aarch64-none-elf-gcc --version
+
+      - name: Build
         working-directory: ./code
-        run: |
-          make -j$(nproc)
+        run: make -j$(nproc)
 
-      - name: Upload KPM artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: kpm-output
-          path: |
-            ./code/*.kpm
-          retention-days: 30
+          path: ./code/*.kpm
