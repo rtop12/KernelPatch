@@ -10,17 +10,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git wget
+          sudo apt install -y git wget golang
 
-      - name: Install kpmbuild
+      - name: Build kpmbuild from source
         run: |
-          wget -q https://github.com/bmax121/kpmbuild/releases/latest/download/kpmbuild-linux-x86_64 -O kpmbuild
+          git clone https://github.com/bmax121/kpmbuild.git
+          cd kpmbuild
+          go build -o ../kpmbuild ./cmd/kpmbuild
+          cd ..
           chmod +x ./kpmbuild
 
       - name: Build kpm
