@@ -6,10 +6,8 @@
 #include <linux/pid.h>
 #include <asm/page.h>
 
-// 最大支持映射页数，默认 1024 页 = 4MB，适配 UE4 大库
 #define MAX_PAGES 1024
 
-// ========== 内核函数指针 ==========
 typedef struct task_struct* (*find_task_by_vpid_t)(pid_t vnr);
 typedef struct mm_struct* (*get_task_mm_t)(struct task_struct *task);
 typedef void (*mmput_t)(struct mm_struct *mm);
@@ -46,20 +44,17 @@ static do_munmap_t           k_do_munmap;
 static remap_pfn_range_t     k_remap_pfn_range;
 static put_page_t            k_put_page;
 
-// ========== 全局映射状态 ==========
 static struct page *g_page_array[MAX_PAGES];
 static int g_page_num = 0;
 static unsigned long g_mirror_addr = 0;
 static unsigned long g_mirror_size = 0;
 
-// ========== 解析内核符号 ==========
 static int resolve_symbols(void)
 {
     k_find_task_by_vpid = (find_task_by_vpid_t)kallsyms_lookup_name("find_task_by_vpid");
     k_get_task_mm       = (get_task_mm_t)kallsyms_lookup_name("get_task_mm");
     k_mmput             = (mmput_t)kallsyms_lookup_name("mmput");
 
-    // 兼容新旧内核锁命名
     k_mmap_read_lock    = (mmap_read_lock_t)kallsyms_lookup_name("mmap_read_lock");
     k_mmap_read_unlock  = (mmap_read_unlock_t)kallsyms_lookup_name("mmap_read_unlock");
     k_mmap_write_lock   = (mmap_write_lock_t)kallsyms_lookup_name("mmap_write_lock");
@@ -88,7 +83,6 @@ static int resolve_symbols(void)
     return 0;
 }
 
-// ========== 释放当前镜像映射 ==========
 static void free_mirror(void)
 {
     if (g_mirror_addr != 0 && g_mirror_size != 0) {
@@ -108,7 +102,6 @@ static void free_mirror(void)
     g_page_num = 0;
 }
 
-// ========== 核心：创建镜像共享区 ==========
 static long create_mirror(pid_t pid, unsigned long target_addr, unsigned long size)
 {
     if (pid <= 0 || size == 0)
@@ -191,7 +184,6 @@ out_target_read:
     return -EFAULT;
 }
 
-// ========== 控制通道 ==========
 static long mirror_ctl0(const char *args, const char *event, void __user *reserved)
 {
     if (!args) return -EINVAL;
@@ -211,7 +203,6 @@ static long mirror_ctl0(const char *args, const char *event, void __user *reserv
     return -EINVAL;
 }
 
-// ========== 模块生命周期 ==========
 static long mirror_init(const char *args, const char *event, void __user *reserved)
 {
     if (resolve_symbols() != 0)
