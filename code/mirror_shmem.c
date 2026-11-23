@@ -1,4 +1,5 @@
-#include <kpm.h>
+#include "kpmodule.h"
+
 #include <linux/types.h>
 #include <linux/sched.h>
 #include <linux/mm.h>
