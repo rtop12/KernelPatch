@@ -1,4 +1,5 @@
 name: Build KPM
+
 on:
   push:
     branches: [ main ]
@@ -10,31 +11,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout & submodules
+      - name: Checkout your repository code
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
-      - name: Install make
-        run: sudo apt update && sudo apt install -y make
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y make wget xz-utils
 
-      - name: Setup aarch64-none-elf gcc
-        uses: lawkai-vivo/aarch64-none-elf-gcc-action@v1
+      - name: Setup aarch64‑none‑elf‑gcc
+        uses: lawkai‑vivo/aarch64‑none‑elf‑gcc‑action@v1
         with:
           release: "13.2.Rel1"
 
-      - name: Check compiler
+      - name: Download KernelPatch source code
         run: |
-          which aarch64-none-elf-gcc
-          aarch64-none-elf-gcc --version
+          wget -q https://github.com/bmax121/KernelPatch/archive/refs/heads/main.tar.gz -O kp.tar.gz
+          tar -xf kp.tar.gz
+          mv KernelPatch-main KernelPatch
 
-      - name: Build KPM
-        working-directory: ./code
+      - name: Debug check header files
+        run: |
+          ls -la
+          ls -la ./KernelPatch/kpm/include/
+
+      - name: Compile KPM module
+        working‑directory: ./code
         run: make -j$(nproc)
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload compiled artifact
+        uses: actions/upload‑artifact@v4
         with:
-          name: kpm-output
+          name: kpm‑output
           path: ./code/*.kpm
-          retention-days: 30
+          retention‑days: 30
