@@ -3,7 +3,8 @@ CC      := $(TARGET_COMPILE)gcc
 LD      := $(TARGET_COMPILE)ld
 OBJCOPY := $(TARGET_COMPILE)objcopy
 
-KP_DIR ?= ../
+# 子模块存放于仓库根目录KernelPatch文件夹
+KP_DIR ?= ../KernelPatch
 
 CFLAGS  := -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 CFLAGS  += -I$(KP_DIR)/kpm/include
