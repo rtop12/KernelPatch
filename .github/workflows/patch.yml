@@ -13,16 +13,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install ARM64 cross toolchain + kernel headers
+      - name: 安装 ARM64 交叉工具链
         run: |
           sudo apt update -qq
-          sudo apt install -y -qq crossbuild-essential-arm64
+          sudo apt install -y -qq crossbuild-essential-arm64 bc
 
-      - name: Compile module
+      - name: 下载并安装 Linux 内核头文件
+        run: |
+          wget -q https://mirror.ghproxy.com/https://github.com/torvalds/linux/archive/refs/tags/v6.6.tar.gz -O linux.tar.gz
+          mkdir -p linux-src
+          tar -xf linux.tar.gz --strip-components=1 -C ./linux-src
+          cd linux-src
+          make ARCH=arm64 headers_install INSTALL_HDR_PATH=$PWD/../linux-headers
+          echo "KERNEL_HDR=$PWD/../linux-headers/include" >> $GITHUB_ENV
+
+      - name: 编译模块
         working-directory: ./code
         run: make -j$(nproc)
+        env:
+          KERNEL_HDR: ${{ env.KERNEL_HDR }}
 
-      - name: Upload artifact
+      - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: mirror_shmem-kpm
